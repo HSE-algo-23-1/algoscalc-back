@@ -74,21 +74,25 @@ jobs:
     needs: test
     if: needs.test.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/Test'
     steps:
-    - name: executing remote ssh commands
-      uses: appleboy/ssh-action@v0.1.9
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
-            cd ${{ secrets.PROJECT_FOLDER }};
-            echo ${{ secrets.SECRET_PHRASE }} | sudo -S git checkout Test;
-            echo ${{ secrets.SECRET_PHRASE }} | sudo -S git pull;
-            echo ${{ secrets.SECRET_PHRASE }} | sudo export BACK_VERSION=$(git rev-parse --short HEAD)
-            echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.yml down;
-            echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.yml up -d --build;
-            echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker system prune --all --force;
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=BACKEND_VERSION::$(git rev-parse --short HEAD)
+      - name: executing remote ssh commands
+        uses: appleboy/ssh-action@v0.1.9
+        env:
+          BACKEND_VERSION: ${{ steps.get_version.outputs.BACKEND_VERSION }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+              cd ${{ secrets.PROJECT_FOLDER }};
+              echo ${{ secrets.SECRET_PHRASE }} | sudo -S git checkout Test;
+              echo ${{ secrets.SECRET_PHRASE }} | sudo -S git pull;
+              echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.yml down;
+              echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.yml up -d --build;
+              echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker system prune --all --force;
   prod_deploy:
     name: Prod deploy
     runs-on: ubuntu-latest
@@ -106,7 +110,7 @@ jobs:
             cd ${{ secrets.PROJECT_FOLDER }};
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S git fetch;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S git checkout ${{ github.ref }};
-            echo ${{ secrets.SECRET_PHRASE }} | sudo export BACK_VERSION=$(git describe --tags --always)
+            echo ${{ secrets.SECRET_PHRASE }} | export BACKEND_VERSION=$(sudo git describe --tags --always)
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.prod.yml down;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.prod.yml up -d --build;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker system prune --all --force;
