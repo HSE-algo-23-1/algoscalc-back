@@ -85,8 +85,7 @@ jobs:
             cd ${{ secrets.PROJECT_FOLDER }};
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S git checkout Test;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S git pull;
-            echo ${{ secrets.SECRET_PHRASE }} | BACK_VERSION=$(git rev-parse --short HEAD)
-            echo ${{ secrets.SECRET_PHRASE }} | sudo bash -c "echo Test_$BACK_VERSION > .version"
+            echo ${{ secrets.SECRET_PHRASE }} | export BACK_VERSION=$(git rev-parse --short HEAD)
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.yml down;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.yml up -d --build;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker system prune --all --force;
@@ -107,8 +106,7 @@ jobs:
             cd ${{ secrets.PROJECT_FOLDER }};
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S git fetch;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S git checkout ${{ github.ref }};
-            echo ${{ secrets.SECRET_PHRASE }} | BACK_VERSION=$(git describe --tags --always)
-            echo ${{ secrets.SECRET_PHRASE }} | sudo bash -c "echo $BACK_VERSION > .version"
+            echo ${{ secrets.SECRET_PHRASE }} | export BACK_VERSION=$(git describe --tags --always)
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.prod.yml down;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker-compose --file docker-compose.prod.yml up -d --build;
             echo ${{ secrets.SECRET_PHRASE }} | sudo -S docker system prune --all --force;
