@@ -1,0 +1,41 @@
+{
+  "title": "Вычисление НОД (алгоритм Евклида)",
+  "description": "Наибольший общий делитель (НОД) двух и более натуральных чисел – это наибольшее из натуральных чисел, на которое делится каждое из данных чисел.\nВведите два числа и калькулятор выдаст вам значение НОД.",
+  "parameters": [
+    {
+      "name": "a",
+      "title": "Первое число",
+      "description": "Введите целое положительное число",
+      "data_type": "INT",
+      "data_shape": "SCALAR",
+      "default_value": 3
+    },
+    {
+      "name": "b",
+      "title": "Второе число",
+      "description": "Введите целое положительное число",
+      "data_type": "INT",
+      "data_shape": "SCALAR",
+      "default_value": 5
+    }
+
+  ],
+  "outputs": [
+    {
+      "name": "gcd",
+      "title": "Наибольший общий делитель",
+      "description": "Наибольший общий делитель",
+      "data_type": "INT",
+      "data_shape": "SCALAR",
+      "default_value": 1
+    },
+    {
+      "name": "duration",
+      "title": "Длительность программы (секунд)",
+      "description": "Длительность программы (секунд)",
+      "data_type": "FLOAT",
+      "data_shape": "SCALAR",
+      "default_value": null
+    }
+  ]
+}
