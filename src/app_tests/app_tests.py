@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from src.api_models import Algorithms, AnswerAlgorithmDefinition, Data, \
     Parameters, AnswerOutputs
-from src import IS_TEST_APP, ALGORITHMS_ENDPOINT
+from src import IS_TEST_APP, ALGORITHMS_ENDPOINT, BACKEND_VERSION_ENDPOINT
 
 
 class AppTest(unittest.TestCase):
@@ -61,6 +61,11 @@ class AppTest(unittest.TestCase):
         fact_outputs = answer.result
         for fact_output in fact_outputs.outputs:
             self.assertEqual(fact_output.value, output_dict[fact_output.name])
+
+    def test_get_version(self):
+        response = AppTest.client.get(BACKEND_VERSION_ENDPOINT)
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual({'version': 'local'}, response.json())
 
 
 if __name__ == '__main__':

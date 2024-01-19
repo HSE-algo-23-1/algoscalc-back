@@ -6,13 +6,14 @@ from typing import Callable, Optional, Any
 
 from src.core.data_element import DataElement
 from src.core import PARAM_NOT_DATAELEMENT_MSG, PARAM_EXISTS_TMPL, \
-    OUTPUT_NOT_DATAELEMENT_MSG, OUTPUT_EXISTS_TMPL, METHOD_NOT_CALL_MSG,\
-    ADDING_METHOD_FAILED_TEMPL, UNEXPECTED_OUTPUT_TEMPL, TIME_OVER_TEMPL,\
-    UNEXPECTED_PARAM_MSG, EXECUTION_FAILED_TEMPL, UNSET_PARAMS_MSG,\
+    OUTPUT_NOT_DATAELEMENT_MSG, OUTPUT_EXISTS_TMPL, METHOD_NOT_CALL_MSG, \
+    ADDING_METHOD_FAILED_TEMPL, UNEXPECTED_OUTPUT_TEMPL, TIME_OVER_TEMPL, \
+    UNEXPECTED_PARAM_MSG, EXECUTION_FAILED_TEMPL, UNSET_PARAMS_MSG, \
     UNSET_OUTPUTS_MSG, NOT_DICT_PARAMS_MSG, REDUNDANT_PARAMETER_TEMPL, \
     MISSED_PARAMETER_TEMPL, NOT_DICT_OUTPUTS_MSG, REDUNDANT_OUTPUT_TEMPL, \
     MISSED_OUTPUT_TEMPL, NON_STRING_PARAM_TEMPL, EMPTY_STRING_PARAM_TEMPL, \
-    NON_INT_TIMEOUT_MSG, NEG_INT_TIMEOUT_MSG, DEFAULT_TIMEOUT
+    NON_INT_TIMEOUT_MSG, NEG_INT_TIMEOUT_MSG, DEFAULT_TIMEOUT, \
+    PARAM_IS_NON_DETERMINISTIC_MSG
 
 
 class Algorithm(object):
@@ -132,6 +133,10 @@ class Algorithm(object):
         if parameter.name in self.__parameters.keys():
             self.__log_and_raise_error(PARAM_EXISTS_TMPL.format(parameter.name),
                                        ValueError)
+        if not parameter.deterministic:
+            self.__log_and_raise_error(PARAM_IS_NON_DETERMINISTIC_MSG.
+                                       format(parameter.name),
+                                       ValueError)
         self.__parameters[parameter.name] = parameter
 
     def add_output(self, output: DataElement) -> None:
@@ -182,7 +187,12 @@ class Algorithm(object):
             params = self.__get_default_parameters()
             outputs = self.execute(params)
             for key, value in self.__outputs.items():
-                if outputs[key] != value.default_value:
+                if not self.__outputs[key].deterministic:
+                    error_msg = (self.__outputs[key].
+                                 get_check_value_errors(outputs[key]))
+                    if error_msg:
+                        raise ValueError(error_msg)
+                elif outputs[key] != value.default_value:
                     raise ValueError(
                         UNEXPECTED_OUTPUT_TEMPL.format(key, outputs[key],
                                                        value.default_value))

@@ -3,9 +3,9 @@ import time
 
 
 from src.core.data_element import DataType, DataShape, DataElement
-from src.core_tests import LOG_CONFIG_STUB, NAME, TITLE, DESCRIPTION,\
-    PARAM_NAME, PARAM_LIST_NAME, PARAM_TITLE, PARAM_DESCRIPTION,\
-    PARAM_INT_DEFAULT, PARAM_LIST_DEFAULT, OUTPUT_NAME, OUTPUT_MATRIX_NAME,\
+from src.core_tests import LOG_CONFIG_STUB, NAME, TITLE, DESCRIPTION, \
+    PARAM_NAME, PARAM_LIST_NAME, PARAM_TITLE, PARAM_DESCRIPTION, \
+    PARAM_INT_DEFAULT, PARAM_LIST_DEFAULT, OUTPUT_NAME, OUTPUT_MATRIX_NAME, \
     OUTPUT_TITLE, OUTPUT_DESCRIPTION
 from src.core.algorithm import Algorithm, \
     NON_STRING_PARAM_TEMPL, EMPTY_STRING_PARAM_TEMPL, NON_INT_TIMEOUT_MSG, \
@@ -14,8 +14,8 @@ from src.core.algorithm import Algorithm, \
     ADDING_METHOD_FAILED_TEMPL, UNEXPECTED_OUTPUT_TEMPL, TIME_OVER_TEMPL, \
     EXECUTION_FAILED_TEMPL, UNSET_PARAMS_MSG, UNSET_OUTPUTS_MSG, \
     NOT_DICT_PARAMS_MSG, REDUNDANT_PARAMETER_TEMPL, MISSED_PARAMETER_TEMPL, \
-    NOT_DICT_OUTPUTS_MSG, REDUNDANT_OUTPUT_TEMPL, MISSED_OUTPUT_TEMPL,\
-    UNEXPECTED_PARAM_MSG
+    NOT_DICT_OUTPUTS_MSG, REDUNDANT_OUTPUT_TEMPL, MISSED_OUTPUT_TEMPL, \
+    UNEXPECTED_PARAM_MSG, PARAM_IS_NON_DETERMINISTIC_MSG
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -135,6 +135,32 @@ class AlgorithmTests(unittest.TestCase):
         self.alg.add_parameter(self.param)
         self.assertRaisesRegex(ValueError, PARAM_EXISTS_TMPL.format(PARAM_NAME),
                                self.alg.add_parameter, self.param)
+
+    def test_non_deterministic_parameter(self):
+        alg = Algorithm(NAME, TITLE, DESCRIPTION, LOG_CONFIG_STUB, 0)
+        param = DataElement(PARAM_NAME, PARAM_TITLE, PARAM_DESCRIPTION,
+                            DataType.INT, DataShape.SCALAR, None)
+
+        with self.assertRaises(ValueError) as error:
+            alg.add_parameter(param)
+        self.assertEqual(PARAM_IS_NON_DETERMINISTIC_MSG.format(PARAM_NAME),
+                         str(error.exception))
+
+    def test_non_deterministic_output(self):
+        alg = Algorithm(NAME, TITLE, DESCRIPTION, LOG_CONFIG_STUB, 0)
+        param = DataElement(PARAM_NAME, PARAM_TITLE, PARAM_DESCRIPTION,
+                            DataType.INT, DataShape.SCALAR, 10)
+        output = DataElement(OUTPUT_NAME, OUTPUT_TITLE, OUTPUT_DESCRIPTION,
+                             DataType.INT, DataShape.SCALAR, None)
+        alg.add_parameter(param)
+        alg.add_output(output)
+
+        def method(param_name):
+            return {OUTPUT_NAME: param_name}
+
+        alg.add_execute_method(method)
+        self.assertIsNone(alg.get_test_errors())
+        self.assertFalse(alg.outputs[0].deterministic)
 
     def test_add_output(self):
         self.alg.add_output(self.output)
